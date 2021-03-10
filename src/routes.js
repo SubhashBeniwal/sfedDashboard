@@ -22,9 +22,19 @@ import KisanSurvey from "./views/Dashboard/surveys/kisanSurvey/surveyList";
 import ViewKisanSurvey from "./views/Dashboard/surveys/kisanSurvey/viewSurvey";
 import RetailSurvey from "./views/Dashboard/surveys/retailSurvey/surveyList";
 import ViewRetailSurvey from "./views/Dashboard/surveys/retailSurvey/viewSurvey";
+import Login from "./views/login";
 // core components/views for RTL layout
 
 const dashboardRoutes = [
+
+  {
+    path: "/login",
+    name: "Dashboard",
+    icon: Dashboard,
+    component: Login,
+    layout: "/auth",
+    hidden: true
+  },
 
   {
     path: "/dashboard",
@@ -34,14 +44,14 @@ const dashboardRoutes = [
     layout: "/admin",
     hidden: false
   },
-  {
-    path: "/user",
-    name: "User Profile",
-    icon: Person,
-    component: UserProfile,
-    layout: "/admin",
-    hidden: false
-  },
+  // {
+  //   path: "/user",
+  //   name: "User Profile",
+  //   icon: Person,
+  //   component: UserProfile,
+  //   layout: "/admin",
+  //   hidden: false
+  // },
 
   {
     path: "/internSurvey",
@@ -92,14 +102,6 @@ const dashboardRoutes = [
     layout: "/admin",
     hidden: true,
   },
-    {
-    path: "/retailSurvey",
-    name: "Retail Survey",
-    icon: "content_paste",
-    component: RetailSurvey,
-    layout: "/admin",
-    hidden: false
-  },
   {
     path: "/retailSurvey:id",
     name: "View Retail Survey",
@@ -108,15 +110,24 @@ const dashboardRoutes = [
     layout: "/admin",
     hidden: true,
   },
-
-  {
-    path: "/table",
-    name: "Table List",
+    {
+    path: "/retailSurvey",
+    name: "Retail Survey",
     icon: "content_paste",
-    component: TableList,
+    component: RetailSurvey,
     layout: "/admin",
     hidden: false
   },
+
+
+  // {
+  //   path: "/table",
+  //   name: "Table List",
+  //   icon: "content_paste",
+  //   component: TableList,
+  //   layout: "/admin",
+  //   hidden: false
+  // },
   // {
   //   path: "/typography",
   //   name: "Typography",

@@ -39,7 +39,7 @@ function ViewInputSurvey(props) {
             } else {
                 // No user is signed in.
                 // console.log("logged out");
-                props.history.push("/login")
+                // props.history.push("/login")
             }
         });
     }

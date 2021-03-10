@@ -20,6 +20,7 @@ import CustomInput from "components/CustomInput/CustomInput.js";
 import Button from "components/CustomButtons/Button.js";
 
 import styles from "assets/jss/material-dashboard-react/components/headerLinksStyle.js";
+import {auth} from "../../services/firebase";
 
 const useStyles = makeStyles(styles);
 
@@ -47,6 +48,16 @@ export default function AdminNavbarLinks() {
   const handleCloseProfile = () => {
     setOpenProfile(null);
   };
+
+  const onLogout = () => {
+    auth.signOut().then(() => {
+      // Sign-out successful.
+      setOpenProfile(null);
+    }).catch((error) => {
+      // An error happened.
+    });
+
+  }
   return (
     <div>
       {/*<div className={classes.searchWrapper}>*/}
@@ -207,7 +218,7 @@ export default function AdminNavbarLinks() {
                     {/*</MenuItem>*/}
                     <Divider light />
                     <MenuItem
-                      onClick={handleCloseProfile}
+                      onClick={onLogout}
                       className={classes.dropdownItem}
                     >
                       Logout
