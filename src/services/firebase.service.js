@@ -10,6 +10,8 @@ const dbRetailSurveys = firestore.collection("/retailSurveys");
 const dbInputSurveys = firestore.collection("/inputSurvey");
 const dbEquipmentSurveys = firestore.collection("/equipmentBooking");
 const dbAnimalSurveys = firestore.collection("/animalFeedBooking");
+const dbAds = firestore.collection("/ads");
+
 
 class FirebaseDataService {
     getAll() {
@@ -112,6 +114,10 @@ class FirebaseDataService {
 
     setCommodity(id, value) {
         return dbCommodity.doc(id).set(value);
+    }
+
+    updateBanner(id, value) {
+        return dbAds.doc(id).update(value);
     }
 
     delete(id) {

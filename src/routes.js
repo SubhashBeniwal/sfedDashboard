@@ -23,6 +23,7 @@ import ViewKisanSurvey from "./views/Dashboard/surveys/kisanSurvey/viewSurvey";
 import RetailSurvey from "./views/Dashboard/surveys/retailSurvey/surveyList";
 import ViewRetailSurvey from "./views/Dashboard/surveys/retailSurvey/viewSurvey";
 import Login from "./views/login";
+import BannerUpload from "./views/Dashboard/bannerUpload";
 // core components/views for RTL layout
 
 const dashboardRoutes = [
@@ -115,6 +116,14 @@ const dashboardRoutes = [
     name: "Retail Survey",
     icon: "content_paste",
     component: RetailSurvey,
+    layout: "/admin",
+    hidden: false
+  },
+{
+    path: "/upload-banner",
+    name: "Upload Banner For APP",
+    icon: "content_paste",
+    component: BannerUpload,
     layout: "/admin",
     hidden: false
   },
