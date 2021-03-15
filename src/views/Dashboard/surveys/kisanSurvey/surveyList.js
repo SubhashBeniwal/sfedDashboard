@@ -1,7 +1,7 @@
 import React, {Component, useEffect, useState} from "react";
 import FirebaseDataService from "../../../../services/firebase.service";
 // import {Table, Button} from 'reactstrap';
-import {auth} from "../../../../services/firebase";
+import {auth, firestore} from "../../../../services/firebase";
 import Table from "components/Table/Table.js";
 import Button from "@material-ui/core/Button";
 import GridItem from "../../../../components/Grid/GridItem";
@@ -12,7 +12,7 @@ import GridContainer from "../../../../components/Grid/GridContainer";
 import {makeStyles} from "@material-ui/core/styles";
 import {Redirect, Switch} from "react-router-dom";
 import Box from "@material-ui/core/Box";
-import {Search} from "@material-ui/icons";
+import {CloseRounded, Search} from "@material-ui/icons";
 
 const styles = {
     cardCategoryWhite: {
@@ -74,6 +74,8 @@ function KisanSurvey(props) {
     const [submitted, setSubmitted] = useState(false)
     const [searchText, setSearchText] = useState('')
     const [filteredArray, setFilteredArray] = useState([])
+    const [resetSearch, setResetSearch] = useState(false)
+
     useEffect(() => {
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -166,20 +168,18 @@ function KisanSurvey(props) {
                 let data = []
                 tableData.push(data)
                 return data.push(item.id,
-                    item.basic_info.farmer_first_name,
-                    item.basic_info.farmer_sir_name,
-                    <>{item.basic_info.survey_state},
-                        {item.basic_info.survey_state},
-                        {item.basic_info.survey_district},
-                        {item.basic_info.survey_tehsil},
-                        {item.basic_info.survey_village}
+                    item.basic_info.first_name,
+                    item.basic_info.sir_name,
+                    <>{item.basic_info.state},
+                        {item.basic_info.district},
+                        {item.basic_info.village}
                     </>,
-                    item.basic_info.farmer_mobile,
+                    item.basic_info.phone,
                     item.basic_info.cultivated_land_acres,
                     _getDateTime(item.basic_info.time),
-                    item.basic_info.agentName,
-                    item.basic_info.agentId,
-                    item.basic_info.have_storage_facility,
+                    item.agentName,
+                    item.agentId,
+                    item.basic_info.storage_space_available > 0 ? 'Yes' : 'No',
                     item.basic_info.storage_space_available,
                     <>
                         <Button onClick={(e) => {
@@ -208,26 +208,28 @@ function KisanSurvey(props) {
         setSearchText(e.target.value)
         // console.log(searchText)
     }
-    useEffect(()=>{
-        let arr = [];
-        let newArray = [];
-        tableData.map((item,index)=>{
-            return item.filter((item1,index1)=>{
-                return item1 === searchText && newArray.push(item)
-            })
-        })
-        arr.push(newArray)
-        setFilteredArray(newArray)
-        // console.log(arr)
-        // console.log(newArray)
-    },[searchText])
 
     const onSearch = () => {
-        tableData1 = getTableValues()
-        console.log(tableData1)
-        return tableData1
+        let items = [];
+        let surveys = [];
+        let collectionRef = firestore.collection("/kisan")
+
+        collectionRef.where('first_name', '==', searchText).get().then(querySnapshot => {
+            querySnapshot.forEach(documentSnapshot => {
+                // console.log(`Found document at ${documentSnapshot.ref.path}`);
+                // console.log(documentSnapshot.data())
+                items = documentSnapshot.data()
+                surveys.push(items);
+                setSurveyList(surveys)
+                // console.log(surveys)
+            });
+        });
     }
 
+    const reset = () => {
+        setSearchText('')
+        setResetSearch(true)
+    }
 
     return (
         <GridContainer>
@@ -244,6 +246,7 @@ function KisanSurvey(props) {
                                         <input
                                             className={classes.input}
                                             placeholder={"Search"}
+                                            value={searchText}
                                             onChange={(e)=>{
                                                 onValueChange(e)
                                             }}
@@ -255,6 +258,13 @@ function KisanSurvey(props) {
                                                 e.preventDefault();
                                                 onSearch()
                                             }}/>
+                                        {searchText !== '' && <CloseRounded
+                                            color={"secondary"}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                reset()
+                                            }}
+                                        />}
                                     </Box>
                                 </Box>
                             </GridItem>

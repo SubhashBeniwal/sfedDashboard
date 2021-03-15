@@ -1,7 +1,7 @@
 import React, {Component, useEffect, useState} from "react";
 import FirebaseDataService from "../../../../services/firebase.service";
 // import {Table, Button} from 'reactstrap';
-import {auth} from "../../../../services/firebase";
+import {auth, firestore} from "../../../../services/firebase";
 import Table from "components/Table/Table.js";
 import Button from "@material-ui/core/Button";
 import GridItem from "../../../../components/Grid/GridItem";
@@ -12,7 +12,7 @@ import GridContainer from "../../../../components/Grid/GridContainer";
 import {makeStyles} from "@material-ui/core/styles";
 import {Redirect, Switch} from "react-router-dom";
 import Box from "@material-ui/core/Box";
-import {Search} from "@material-ui/icons";
+import {CloseRounded, Search} from "@material-ui/icons";
 
 const styles = {
     cardCategoryWhite: {
@@ -74,6 +74,8 @@ function RetailSurvey(props) {
     const [submitted, setSubmitted] = useState(false)
     const [searchText, setSearchText] = useState('')
     const [filteredArray, setFilteredArray] = useState([])
+    const [resetSearch, setResetSearch] = useState(false)
+
     useEffect(() => {
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -91,6 +93,12 @@ function RetailSurvey(props) {
         console.log(filteredArray)
         FirebaseDataService.getSurveys('retail').onSnapshot(onDataChange);
     }, [])
+
+    useEffect(() => {
+        console.log(filteredArray)
+        FirebaseDataService.getSurveys('retail').onSnapshot(onDataChange);
+    }, [searchText=== ''])
+
     const onDataChange = (items) => {
         let surveys = [];
 
@@ -169,7 +177,7 @@ function RetailSurvey(props) {
                 return data.push(item.id,
                     item.basic_info.full_name,
                     <>{item.basic_info.city},
-                        {item.basic_info.sstate},
+                        {item.basic_info.state},
                     </>,
                     item.basic_info.phone,
                     item.basic_info.land_coordinates,
@@ -203,24 +211,26 @@ function RetailSurvey(props) {
         setSearchText(e.target.value)
         // console.log(searchText)
     }
-    useEffect(()=>{
-        let arr = [];
-        let newArray = [];
-        tableData.map((item,index)=>{
-            return item.filter((item1,index1)=>{
-                return item1 === searchText && newArray.push(item)
-            })
-        })
-        arr.push(newArray)
-        setFilteredArray(newArray)
-        // console.log(arr)
-        // console.log(newArray)
-    },[searchText])
 
     const onSearch = () => {
-        tableData1 = getTableValues()
-        console.log(tableData1)
-        return tableData1
+        let items = [];
+        let surveys = [];
+        let collectionRef = firestore.collection("/retail")
+        collectionRef.where('full_name', '==', searchText).get().then(querySnapshot => {
+            querySnapshot.forEach(documentSnapshot => {
+                // console.log(`Found document at ${documentSnapshot.ref.path}`);
+                // console.log(documentSnapshot.data())
+                items = documentSnapshot.data()
+                surveys.push(items);
+                setSurveyList(surveys)
+                // console.log(surveys)
+            });
+        });
+    }
+
+    const reset = () => {
+        setSearchText('')
+        setResetSearch(true)
     }
 
 
@@ -239,6 +249,7 @@ function RetailSurvey(props) {
                                         <input
                                             className={classes.input}
                                             placeholder={"Search"}
+                                            value={searchText}
                                             onChange={(e)=>{
                                                 onValueChange(e)
                                             }}
@@ -250,6 +261,13 @@ function RetailSurvey(props) {
                                                 e.preventDefault();
                                                 onSearch()
                                             }}/>
+                                        {searchText !== '' && <CloseRounded
+                                            color={"secondary"}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                reset()
+                                            }}
+                                        />}
                                     </Box>
                                 </Box>
                             </GridItem>

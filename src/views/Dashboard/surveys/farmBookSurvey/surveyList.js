@@ -1,7 +1,7 @@
 import React, {Component, useEffect, useState} from "react";
 import FirebaseDataService from "../../../../services/firebase.service";
 // import {Table, Button} from 'reactstrap';
-import {auth} from "../../../../services/firebase";
+import {auth, firestore} from "../../../../services/firebase";
 import Table from "components/Table/Table.js";
 import Button from "@material-ui/core/Button";
 import GridItem from "../../../../components/Grid/GridItem";
@@ -12,7 +12,7 @@ import GridContainer from "../../../../components/Grid/GridContainer";
 import {makeStyles} from "@material-ui/core/styles";
 import {Redirect, Switch} from "react-router-dom";
 import Box from "@material-ui/core/Box";
-import {Search} from "@material-ui/icons";
+import {CloseRounded, Search} from "@material-ui/icons";
 
 const styles = {
     cardCategoryWhite: {
@@ -74,6 +74,9 @@ function FarmbookSurvey(props) {
     const [submitted, setSubmitted] = useState(false)
     const [searchText, setSearchText] = useState('')
     const [filteredArray, setFilteredArray] = useState([])
+    const [resetSearch, setResetSearch] = useState(false)
+
+
     useEffect(() => {
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -86,11 +89,17 @@ function FarmbookSurvey(props) {
             }
         });
     }, [])
+
     let tableData1 = []
+
     useEffect(() => {
-        console.log(filteredArray)
         FirebaseDataService.getSurveys('farmbook').onSnapshot(onDataChange);
     }, [])
+
+    useEffect(() => {
+        FirebaseDataService.getSurveys('farmbook').onSnapshot(onDataChange);
+    }, [searchText=== ''])
+
     const onDataChange = (items) => {
         let surveys = [];
 
@@ -167,22 +176,19 @@ function FarmbookSurvey(props) {
                 let data = []
                 tableData.push(data)
                 return data.push(item.id,
-                    item.farmer_name,
-                    <>{item.survey_state},
-                        {item.survey_state},
-                        {item.survey_district},
-                        {item.survey_tehsil},
-                        {item.survey_village}
+                    item.farmer_info.farmer_name,
+                    <>{item.farmer_info.state},
+                        {item.farmer_info.district},
+                        {item.farmer_info.tehsil},
+                        {item.farmer_info.village}
                     </>,
-                    item.phone,
+                    item.farmer_info.phone,
                     item.farm_technique_info.acreage_planted,
                     item.farm_technique_info.area_in_acreage_irrigation,
                     item.soil_info.commodity_sold_to,
                     _getDateTime(item.time),
                     item.agentName,
                     item.agentId,
-                    item.have_storage_facility,
-                    item.storage_space_available,
                     <>
                         <Button onClick={(e) => {
                             e.preventDefault()
@@ -210,24 +216,27 @@ function FarmbookSurvey(props) {
         setSearchText(e.target.value)
         // console.log(searchText)
     }
-    useEffect(()=>{
-        let arr = [];
-        let newArray = [];
-        tableData.map((item,index)=>{
-            return item.filter((item1,index1)=>{
-                return item1 === searchText && newArray.push(item)
-            })
-        })
-        arr.push(newArray)
-        setFilteredArray(newArray)
-        // console.log(arr)
-        // console.log(newArray)
-    },[searchText])
 
     const onSearch = () => {
-        tableData1 = getTableValues()
-        console.log(tableData1)
-        return tableData1
+        let items = [];
+        let surveys = [];
+        let collectionRef = firestore.collection("/farmbook")
+
+        collectionRef.where('farmer_name', '==', searchText).get().then(querySnapshot => {
+            querySnapshot.forEach(documentSnapshot => {
+                // console.log(`Found document at ${documentSnapshot.ref.path}`);
+                // console.log(documentSnapshot.data())
+                items = documentSnapshot.data()
+                surveys.push(items);
+                setSurveyList(surveys)
+                // console.log(surveys)
+            });
+        });
+    }
+
+    const reset = () => {
+        setSearchText('')
+        setResetSearch(true)
     }
 
 
@@ -246,6 +255,7 @@ function FarmbookSurvey(props) {
                                         <input
                                             className={classes.input}
                                             placeholder={"Search"}
+                                            value={searchText}
                                             onChange={(e)=>{
                                                 onValueChange(e)
                                             }}
@@ -257,6 +267,13 @@ function FarmbookSurvey(props) {
                                                 e.preventDefault();
                                                 onSearch()
                                             }}/>
+                                        {searchText !== '' && <CloseRounded
+                                            color={"secondary"}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                reset()
+                                            }}
+                                        />}
                                     </Box>
                                 </Box>
                             </GridItem>
@@ -280,8 +297,6 @@ function FarmbookSurvey(props) {
                                     "Time/Date",
                                     "Agent name",
                                     "Agent ID",
-                                    "Do you have a storage facility?",
-                                    "Total storage Space?",
                                     "Actions"
                                 ]
                             }
