@@ -1,7 +1,7 @@
 import React, {Component, useEffect, useState} from "react";
 import FirebaseDataService from "../../../../services/firebase.service";
 // import {Table, Button} from 'reactstrap';
-import {auth} from "../../../../services/firebase";
+import {auth, firestore} from "../../../../services/firebase";
 import Table from "components/Table/Table.js";
 import Button from "@material-ui/core/Button";
 import GridItem from "../../../../components/Grid/GridItem";
@@ -12,7 +12,7 @@ import GridContainer from "../../../../components/Grid/GridContainer";
 import {makeStyles} from "@material-ui/core/styles";
 import {Redirect, Switch} from "react-router-dom";
 import Box from "@material-ui/core/Box";
-import {Search} from "@material-ui/icons";
+import {CloseRounded, Search} from "@material-ui/icons";
 
 const styles = {
     cardCategoryWhite: {
@@ -59,7 +59,7 @@ const styles = {
     input: {
         border: 0
     },
-    searchIcon:{
+    searchIcon: {
         cursor: "pointer"
     }
 };
@@ -74,6 +74,8 @@ function InternSurvey(props) {
     const [submitted, setSubmitted] = useState(false)
     const [searchText, setSearchText] = useState('')
     const [filteredArray, setFilteredArray] = useState([])
+    const [resetSearch, setResetSearch] = useState(false)
+
     useEffect(() => {
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -86,11 +88,18 @@ function InternSurvey(props) {
             }
         });
     }, [])
-let tableData1 = []
+    let tableData1 = [];
+
     useEffect(() => {
         console.log(filteredArray)
         FirebaseDataService.getSurveys('intern').onSnapshot(onDataChange);
     }, [])
+
+    useEffect(() => {
+        console.log(filteredArray)
+        FirebaseDataService.getSurveys('intern').onSnapshot(onDataChange);
+    }, [searchText=== ''])
+
     const onDataChange = (items) => {
         let surveys = [];
 
@@ -206,28 +215,31 @@ let tableData1 = []
     }
     tableData1 = getTableValues()
 
-    const onValueChange = (e) =>{
+    const onValueChange = (e) => {
         setSearchText(e.target.value)
         // console.log(searchText)
     }
-    useEffect(()=>{
-        let arr = [];
-        let newArray = [];
-        tableData.map((item,index)=>{
-            return item.filter((item1,index1)=>{
-                return item1 === searchText && newArray.push(item)
-            })
-        })
-        arr.push(newArray)
-        setFilteredArray(newArray)
-        // console.log(arr)
-        // console.log(newArray)
-    },[searchText])
 
     const onSearch = () => {
-        tableData1 = getTableValues()
-        console.log(tableData1)
-        return tableData1
+        let items = [];
+        let surveys = [];
+        let collectionRef = firestore.collection("/surveys")
+
+        collectionRef.where('farmer_first_name', '==', searchText).get().then(querySnapshot => {
+            querySnapshot.forEach(documentSnapshot => {
+                // console.log(`Found document at ${documentSnapshot.ref.path}`);
+                // console.log(documentSnapshot.data())
+                items = documentSnapshot.data()
+                surveys.push(items);
+                setSurveyList(surveys)
+                // console.log(surveys)
+            });
+        });
+
+    }
+    const reset = () => {
+        setSearchText('')
+        setResetSearch(true)
     }
 
 
@@ -246,7 +258,9 @@ let tableData1 = []
                                         <input
                                             className={classes.input}
                                             placeholder={"Search"}
-                                            onChange={(e)=>{
+                                            value={searchText}
+                                            // defaultValue={searchText}
+                                            onChange={(e) => {
                                                 onValueChange(e)
                                             }}
                                         />
@@ -254,9 +268,17 @@ let tableData1 = []
                                             className={classes.searchIcon}
                                             color={"secondary"}
                                             onClick={(e) => {
-                                            e.preventDefault();
+                                                e.preventDefault();
                                                 onSearch()
-                                        }}/>
+                                            }}/>
+
+                                        {searchText !== '' && <CloseRounded
+                                            color={"secondary"}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                reset()
+                                            }}
+                                        />}
                                     </Box>
                                 </Box>
                             </GridItem>
